@@ -3,7 +3,7 @@ services:
     build: .
     container_name: log-agent
     environment:
-      - CONTROLLER_URL=http://139.162.103.240:7318/api/upload-logs
+      - CONTROLLER_URL=https://139.162.103.240:7318/api/upload-logs
       - TZ=Asia/Taipei
     volumes:
       # 掛載系統 Log
