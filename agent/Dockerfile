@@ -4,9 +4,7 @@ FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive
 
 # 新增 docker.io 來提供 docker CLI 工具
-RUN apt-get update && \
-    apt-get install -y cron curl tzdata docker.io && \
-    rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y cron curl tzdata docker.io && rm -rf /var/lib/apt/lists/*
 
 ENV TZ=Asia/Taipei
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
