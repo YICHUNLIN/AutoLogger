@@ -85,6 +85,7 @@ app.post('/api/upload-logs', ipFilter, (req, res) => {
     const ip = req.clientIp;
     
     console.log(`[${timestamp}] 收到來自 ${ip} 的報告`);
+    console.log(req.body)
 
     let alerts = [];
     let isCritical = false;
