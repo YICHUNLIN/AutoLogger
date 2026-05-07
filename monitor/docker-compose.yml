@@ -1,0 +1,19 @@
+services:
+  monitor-app:
+    build: .
+    container_name: monitor-app
+    env_file:
+      - .env # 讀取外部環境變數檔
+    restart: unless-stopped
+    # 這裡不需要開放 ports 給宿主機，因為外部流量會統一由 Nginx 處理
+
+  nginx:
+    image: nginx:alpine
+    container_name: monitor-nginx
+    ports:
+      - "7318:80" # 伺服器對外的 Port (如果你這台機器 80 Port 已被佔用，可改為 8080:80)
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - monitor-app
+    restart: unless-stopped

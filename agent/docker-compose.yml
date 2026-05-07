@@ -1,0 +1,13 @@
+services:
+  log-agent:
+    build: .
+    container_name: log-agent
+    environment:
+      - CONTROLLER_URL=http://139.162.103.240:7318/api/upload-logs
+      - TZ=Asia/Taipei
+    volumes:
+      # 掛載系統 Log
+      - /var/log:/var/log:ro
+      # 【新增】掛載 Docker Socket，讓容器能與宿主機的 Docker 溝通
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
