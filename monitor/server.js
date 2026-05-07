@@ -12,7 +12,6 @@ app.use(express.json());
 // ==========================================
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || '';
 const PORT = process.env.PORT || 3000;
-console.log(process.env)
 
 // 將字串 "192.168.1.10, 192.168.1.11" 轉換成陣列，並去除多餘空白
 const allowedIpsString = process.env.ALLOWED_IPS || '127.0.0.1';
@@ -145,10 +144,8 @@ app.post('/api/upload-logs', ipFilter, (req, res) => {
     // 4. 判斷並發送通知
     // ------------------------------------------
     // 只要陣列中有任何警報訊息，就呼叫 Slack 發送
-    if (alerts.length > 0) {
-        const level = isCritical ? 'critical' : 'warning';
-        sendDiscordAlert(ip, alerts, level);
-    }
+    const level = isCritical ? 'critical' : 'warning';
+    sendDiscordAlert(ip, alerts, level);
 
     // 預留寫入資料庫的區塊供 Dashboard 使用
     
