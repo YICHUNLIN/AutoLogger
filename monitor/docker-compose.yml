@@ -11,7 +11,7 @@ services:
     image: nginx:alpine
     container_name: monitor-nginx
     ports:
-      - "7318:80" # 伺服器對外的 Port (如果你這台機器 80 Port 已被佔用，可改為 8080:80)
+      - "7318:443" # 伺服器對外的 Port (如果你這台機器 80 Port 已被佔用，可改為 8080:80)
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
       # 【關鍵掛載】將宿主機憑證目錄掛載進容器
