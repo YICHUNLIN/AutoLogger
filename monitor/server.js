@@ -17,9 +17,6 @@ app.use(express.json());
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || '';
 const PORT = process.env.PORT || 3000;
 
-// 將字串 "192.168.1.10, 192.168.1.11" 轉換成陣列，並去除多餘空白
-const allowedIpsString = process.env.ALLOWED_IPS || '127.0.0.1';
-const ALLOWED_IPS = allowedIpsString.split(',').map(ip => ip.trim());
 
 // 警報門檻值 (可依據伺服器實際狀況微調)
 const THRESHOLDS = {
@@ -178,5 +175,4 @@ app.post('/api/upload-logs', ipFilter, (req, res) => {
 app.listen(PORT, () => {
     console.log(`🚀 Monitor 控制器啟動成功，正在監聽 Port ${PORT}`);
     console.log(`🛡️ 信任代理 (Trust Proxy): 啟用`);
-    console.log(`📝 目前載入的 IP 白名單:`, ALLOWED_IPS);
 });
