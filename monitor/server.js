@@ -2,6 +2,10 @@ require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
 const app = express();
+const fs = require('fs');       // 【新增】檔案系統模組
+const path = require('path');   // 【新增】路徑處理模組
+// 白名單檔案的路徑 (對應 docker-compose 掛載進來的位置)
+const WHITELIST_PATH = path.join(__dirname, 'whitelist.txt');
 
 // 【重要】信任 Nginx 等反向代理，確保 req.ip 取得的是真實客戶端 IP
 app.set('trust proxy', true);
@@ -31,13 +35,28 @@ const ipFilter = (req, res, next) => {
     // 因已啟用 trust proxy，此處的 req.ip 即為真實來源 IP
     const clientIp = req.ip.replace('::ffff:', ''); 
 
-    if (!ALLOWED_IPS.includes(clientIp)) {
-        console.warn(`⛔ 拒絕未授權的 IP 存取: ${clientIp}`);
-        return res.status(403).json({ error: 'Forbidden: IP not in whitelist' });
+    try {
+        // 1. 每次收到 Request，就即時讀取檔案內容 (達到免重啟熱更新)
+        const fileContent = fs.readFileSync(WHITELIST_PATH, 'utf8');
+        
+        // 2. 解析檔案內容：以換行符號切割，去除空白，並過濾掉空行與 # 開頭的註解
+        const allowedIps = fileContent
+            .split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0 && !line.startsWith('#'));
+
+        // 3. 比對 IP
+        if (!allowedIps.includes(clientIp)) {
+            console.warn(`⛔ 拒絕未授權的 IP 存取: ${clientIp}`);
+            return res.status(403).json({ error: 'Forbidden: IP not in whitelist' });
+        }
+        
+        req.clientIp = clientIp;
+        next();
+    } catch (err) {
+        console.error('❌ 讀取白名單檔案失敗:', err.message);
+        return res.status(500).json({ error: 'Internal Server Error' });
     }
-    
-    req.clientIp = clientIp;
-    next();
 };
 
 // ==========================================
