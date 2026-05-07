@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
 const app = express();
@@ -9,8 +10,9 @@ app.use(express.json());
 // ==========================================
 // 環境變數與參數設定區
 // ==========================================
-const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL || '';
+const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || '';
 const PORT = process.env.PORT || 3000;
+console.log(process.env)
 
 // 將字串 "192.168.1.10, 192.168.1.11" 轉換成陣列，並去除多餘空白
 const allowedIpsString = process.env.ALLOWED_IPS || '127.0.0.1';
@@ -40,32 +42,39 @@ const ipFilter = (req, res, next) => {
 };
 
 // ==========================================
-// Slack 通知發送模組
+// Discord 通知發送模組 (取代原本的 sendSlackAlert)
 // ==========================================
-async function sendSlackAlert(ip, alertBlocks, level = 'warning') {
-    if (!SLACK_WEBHOOK_URL) {
-        console.error('⚠️ 未設定 SLACK_WEBHOOK_URL，無法發送通知');
+async function sendDiscordAlert(ip, alertBlocks, level = 'warning') {
+    if (!DISCORD_WEBHOOK_URL) {
+        console.error('⚠️ 未設定 DISCORD_WEBHOOK_URL，無法發送通知');
         return;
     }
 
-    const colors = { critical: '#ff0000', warning: '#ffcc00', info: '#36a64f' };
+    // Discord 的 Embed 顏色代碼必須是十進制整數
+    // 紅色=16711680, 黃色=16763904, 綠色=3581519
+    const colors = { critical: 16711680, warning: 16763904, info: 3581519 };
     
+    // 如果是嚴重等級 (Critical)，可以在 content 加上 @everyone 或特定身份組 ID
+    const pingText = level === 'critical' ? '@everyone 🚨 伺服器發生嚴重錯誤！' : '';
+
     const payload = {
-        attachments: [{
-            fallback: `伺服器 ${ip} 狀態報告`,
+        content: pingText, // 顯示在訊息最上方的純文字
+        embeds: [{
+            title: `🔔 伺服器監控報告 | 來源 IP: ${ip}`,
+            description: alertBlocks.join('\n\n'),
             color: colors[level] || colors.warning,
-            pretext: `🔔 *伺服器監控報告* | 來源 IP: \`${ip}\``,
-            text: alertBlocks.join('\n\n'),
-            footer: "Log Analyzer Monitor",
-            ts: Math.floor(Date.now() / 1000)
+            footer: { 
+                text: "Log Analyzer Monitor" 
+            },
+            timestamp: new Date().toISOString() // 自動加上右下角的精準時間
         }]
     };
 
     try {
-        await axios.post(SLACK_WEBHOOK_URL, payload);
-        console.log(`✅ 已成功發送 Slack 警報 (目標 IP: ${ip})`);
+        await axios.post(DISCORD_WEBHOOK_URL, payload);
+        console.log(`✅ 已成功發送 Discord 警報 (目標 IP: ${ip})`);
     } catch (err) {
-        console.error('❌ Slack 通知發送失敗:', err.response ? err.response.data : err.message);
+        console.error('❌ Discord 通知發送失敗:', err.response ? JSON.stringify(err.response.data) : err.message);
     }
 }
 
@@ -138,7 +147,7 @@ app.post('/api/upload-logs', ipFilter, (req, res) => {
     // 只要陣列中有任何警報訊息，就呼叫 Slack 發送
     if (alerts.length > 0) {
         const level = isCritical ? 'critical' : 'warning';
-        sendSlackAlert(ip, alerts, level);
+        sendDiscordAlert(ip, alerts, level);
     }
 
     // 預留寫入資料庫的區塊供 Dashboard 使用
