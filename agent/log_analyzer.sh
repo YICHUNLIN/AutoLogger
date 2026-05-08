@@ -1,14 +1,8 @@
 #!/bin/bash
-# 【新增這一行】強制讓這個腳本內的所有 docker 指令都用 1.41 版去溝通
-export DOCKER_API_VERSION=1.41
 # ==========================================
-# 1. 檢查與讀取環境變數
+# 1. 環境變數
 # ==========================================
-# 強制從環境變數讀取，不再設定硬體碼預設值
-if [ -z "$CONTROLLER_URL" ]; then
-    echo "[$(date)] ❌ 錯誤：未提供 CONTROLLER_URL 環境變數！請檢查 docker-compose.yml 設定。" >> /proc/1/fd/1
-    exit 1
-fi
+CONTROLLER_URL=https://logger.kmn.tw:7318/api/upload-logs
 
 TIME_SYSLOG=$(date -d "1 hour ago" '+%b %e %H')
 TIME_ISO=$(date -d "1 hour ago" '+%Y-%m-%d %H')
