@@ -58,11 +58,12 @@ echo "  ├─ 💾 正在掃描所有實體掛載點..."
 
 # 1. 取得硬碟使用率，過濾掉虛擬掛載點，並轉成 JSON 陣列格式
 # 格式會變成類似: [{"mount":"/", "usage":50}, {"mount":"/mnt/data", "usage":90}]
-DISK_INFO_JSON=$(df -P | grep -vE '^Filesystem|tmpfs|devtmpfs|overlay|shm|squashfs' | awk '{gsub("%","",$5); printf "{\"mount\":\"%s\", \"usage\":%s},", $6, $5}' | sed 's/,$//')
+# 1. 取得硬碟使用率，過濾掉虛擬掛載點以及 /snap 相關路徑
+DISK_INFO_JSON=$(df -P | grep -vE '^Filesystem|tmpfs|devtmpfs|overlay|shm|squashfs|loop|/snap' | awk '{gsub("%","",$5); printf "{\"mount\":\"%s\", \"usage\":%s},", $6, $5}' | sed 's/,$//')
 DISK_USAGE="[$DISK_INFO_JSON]"
 
 # 2. 在終端機印出所有掛載點的狀態 (方便手動測試時觀看)
-df -hP | grep -vE '^Filesystem|tmpfs|devtmpfs|overlay|shm|squashfs' | while read -r line; do
+df -hP | grep -vE '^Filesystem|tmpfs|devtmpfs|overlay|shm|squashfs|loop|/snap' | while read -r line; do
     MOUNT_PT=$(echo "$line" | awk '{print $6}')
     USAGE_PCT=$(echo "$line" | awk '{print $5}')
     echo "  │  ├─ 磁碟 $MOUNT_PT: $USAGE_PCT"
