@@ -40,6 +40,41 @@ for container in $CONTAINERS; do
     fi
 done
 
+
+# ==========================================
+# 資源收集區 (CPU, RAM, Disk)
+# ==========================================
+
+# 1. CPU 使用率 (%) - 取 1 秒內的平均值
+# 邏輯：100% 減去 idle (空閒) 的比例
+CPU_USAGE=$(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100 - $1}')
+
+# 2. 記憶體使用率 (%)
+# 邏輯：(已使用 / 總量) * 100
+MEM_USAGE=$(free | grep Mem | awk '{print $3/$2 * 100.0}')
+
+# 3. 硬碟使用率 (%) - 根目錄
+echo "  ├─ 💾 正在掃描所有實體掛載點..."
+
+# 1. 取得硬碟使用率，過濾掉虛擬掛載點，並轉成 JSON 陣列格式
+# 格式會變成類似: [{"mount":"/", "usage":50}, {"mount":"/mnt/data", "usage":90}]
+DISK_INFO_JSON=$(df -P | grep -vE '^Filesystem|tmpfs|devtmpfs|overlay|shm|squashfs' | awk '{gsub("%","",$5); printf "{\"mount\":\"%s\", \"usage\":%s},", $6, $5}' | sed 's/,$//')
+DISK_USAGE="[$DISK_INFO_JSON]"
+
+# 2. 在終端機印出所有掛載點的狀態 (方便手動測試時觀看)
+df -hP | grep -vE '^Filesystem|tmpfs|devtmpfs|overlay|shm|squashfs' | while read -r line; do
+    MOUNT_PT=$(echo "$line" | awk '{print $6}')
+    USAGE_PCT=$(echo "$line" | awk '{print $5}')
+    echo "  │  ├─ 磁碟 $MOUNT_PT: $USAGE_PCT"
+done
+# ------------------------------------------------
+# 顯示分析過程 (用於手動執行時查看)
+# ------------------------------------------------
+echo "📊 [資源狀態監控]"
+echo "  ├─ 💻 CPU 使用率: ${CPU_USAGE}%"
+echo "  ├─ 🧠 記憶體使用率: ${MEM_USAGE}%"
+echo "  └─ 💾 硬碟使用率: ${DISK_USAGE}%"
+
 # ==========================================
 # 5. 組裝 JSON Payload 
 # ==========================================
@@ -55,6 +90,9 @@ JSON_PAYLOAD=$(cat <<EOF
         "topScannedPorts": [${TOP_PORTS}]
     },
     "health": {
+        "cpuUsage": $CPU_USAGE,
+        "memUsage": $MEM_USAGE,
+        "diskUsage": $DISK_USAGE,
         "syslogErrors": ${SYS_ERRORS:-0},
         "oomKills": ${OOM_KILLS:-0},
         "dockerErrors": ${DOCKER_ERRORS:-0}

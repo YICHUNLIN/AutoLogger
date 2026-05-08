@@ -19,10 +19,11 @@ const PORT = process.env.PORT || 3000;
 
 
 // 警報門檻值 (可依據伺服器實際狀況微調)
-const THRESHOLDS = {
-    authFails: 10,        // 一小時內登入失敗超過幾次觸發警報
-    syslogErrors: 50,     // 系統日誌錯誤超過幾次觸發警報
-    dockerErrors: 20      // Docker 容器錯誤超過幾次觸發警報
+const THRESHOLDS = { 
+    cpuUsage: 90,     // CPU 超過 90%
+    memUsage: 85,     // 記憶體超過 85%
+    diskUsage: 80,    // 硬碟超過 80%
+    syslogErrors: 50
 };
 
 // ==========================================
@@ -183,6 +184,33 @@ app.post('/api/upload-logs', ipFilter, (req, res) => {
 
     if (health.dockerErrors > THRESHOLDS.dockerErrors) {
         alerts.push(`*🐳 Docker 容器異常*\n> 發現 ${health.dockerErrors} 筆容器錯誤日誌 (大於設定門檻 ${THRESHOLDS.dockerErrors})`);
+    }
+    // CPU 檢查
+    if (health.cpuUsage >= THRESHOLDS.cpuUsage) {
+        alerts.push(`*💻 CPU 負載過高*\n> 目前使用率: **${health.cpuUsage.toFixed(1)}%**`);
+    }
+
+    // 記憶體檢查
+    if (health.memUsage >= THRESHOLDS.memUsage) {
+        alerts.push(`*🧠 記憶體即將耗盡*\n> 目前使用率: **${health.memUsage.toFixed(1)}%**`);
+    }
+    
+    // --- 硬碟檢查 (支援多個掛載點的陣列檢查) ---
+    if (health.diskUsage && Array.isArray(health.diskUsage)) {
+        let fullDisks = []; // 用來收集超過門檻的硬碟清單
+
+        // 檢查每一個掛載點
+        health.diskUsage.forEach(disk => {
+            if (disk.usage >= THRESHOLDS.diskUsage) {
+                fullDisks.push(`**${disk.mount}** (已使用: ${disk.usage}%)`);
+            }
+        });
+        
+        // 如果有任何一個硬碟超過門檻，就觸發警報
+        if (fullDisks.length > 0) {
+            isCritical = true;
+            alerts.push(`*💾 硬碟空間不足警報*\n> 以下掛載點容量已達警戒值：\n> 🔸 ${fullDisks.join('\n> 🔸 ')}`);
+        }
     }
 
     // ------------------------------------------
