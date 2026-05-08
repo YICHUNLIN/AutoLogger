@@ -106,7 +106,7 @@ async function sendDiscordAlertForOds(ip, title = 'this is a title', message = [
     
     // 如果是嚴重等級 (Critical)，可以在 content 加上 @everyone 或特定身份組 ID
     const pingText = level === 'critical' ? '@everyone 🚨 伺服器發生嚴重錯誤！' : '';
-
+    console.log(message)
     const payload = {
         content: pingText, // 顯示在訊息最上方的純文字
         embeds: [{
