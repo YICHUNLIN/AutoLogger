@@ -210,6 +210,10 @@ app.post('/api/upload-logs', ipFilter, (req, res) => {
         if (fullDisks.length > 0) {
             isCritical = true;
             alerts.push(`*💾 硬碟空間不足警報*\n> 以下掛載點容量已達警戒值：\n> 🔸 ${fullDisks.join('\n> 🔸 ')}`);
+        } else {
+            alerts.push(`*💾 硬碟掛載資訊*\n>`);
+            const d = health.diskUsage.map(d => `**${d.mount}** (已使用: ${d.usage}%)`);
+            alerts = [...alerts, ...d];
         }
     }
 
