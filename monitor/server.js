@@ -6,7 +6,6 @@ const fs = require('fs');       // 【新增】檔案系統模組
 const path = require('path');   // 【新增】路徑處理模組
 // 白名單檔案的路徑 (對應 docker-compose 掛載進來的位置)
 const WHITELIST_PATH = path.join(__dirname, 'whitelist.txt');
-
 // 【重要】信任 Nginx 等反向代理，確保 req.ip 取得的是真實客戶端 IP
 app.set('trust proxy', true);
 app.use(express.json());
@@ -15,6 +14,7 @@ app.use(express.json());
 // 環境變數與參數設定區
 // ==========================================
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || '';
+const DISCORD_WEBHOOK_ODS_URL = process.env.DISCORD_WEBHOOK_ODS_URL || '';
 const PORT = process.env.PORT || 3000;
 
 
@@ -93,6 +93,41 @@ async function sendDiscordAlert(ip, alertBlocks, level = 'warning') {
     }
 }
 
+async function sendDiscordAlertForOds(ip, title = 'this is a title', message = [],footer = 'this is a footer', level = 'warning') {
+    if (!DISCORD_WEBHOOK_ODS_URL) {
+        console.error('⚠️ 未設定 DISCORD_WEBHOOK_ODS_URL');
+        return;
+    }
+
+    // Discord 的 Embed 顏色代碼必須是十進制整數
+    // 紅色=16711680, 黃色=16763904, 綠色=3581519
+    const colors = { critical: 16711680, warning: 16763904, info: 3581519 };
+    
+    // 如果是嚴重等級 (Critical)，可以在 content 加上 @everyone 或特定身份組 ID
+    const pingText = level === 'critical' ? '@everyone 🚨 伺服器發生嚴重錯誤！' : '';
+
+    const payload = {
+        content: pingText, // 顯示在訊息最上方的純文字
+        embeds: [{
+            title: title,
+            description: message.join('\n\n'),
+            color: colors[level] || colors.warning,
+            footer: {
+                text: footer
+            },
+            timestamp: new Date().toISOString() // 自動加上右下角的精準時間
+        }]
+    };
+
+    try {
+        await axios.post(DISCORD_WEBHOOK_ODS_URL, payload);
+        console.log(`✅ 已成功發送 去 Discord (目標 IP: ${ip})`);
+    } catch (err) {
+        console.error('❌ Discord 通知發送失敗:', err.response ? JSON.stringify(err.response.data) : err.message);
+    }
+}
+
+
 // ==========================================
 // API 路由: 接收 Agent 上傳的分析報告
 // ==========================================
@@ -163,6 +198,20 @@ app.post('/api/upload-logs', ipFilter, (req, res) => {
     // 只要陣列中有任何警報訊息，就呼叫 Slack 發送
     const level = isCritical ? 'critical' : 'warning';
     sendDiscordAlert(ip, alerts, level);
+
+    // 預留寫入資料庫的區塊供 Dashboard 使用
+    
+    res.status(200).json({ message: 'Report processed successfully' });
+});
+
+
+app.post('/api/ods', ipFilter, (req, res) => {
+    const { title, message,footer, timestamp } = req.body;
+    const ip = req.clientIp;
+    
+    console.log(`[${timestamp}] 收到來自 ${ip} 的報告`);
+
+    sendDiscordAlertForOds(ip, title, message, footer, 'warning');
 
     // 預留寫入資料庫的區塊供 Dashboard 使用
     
