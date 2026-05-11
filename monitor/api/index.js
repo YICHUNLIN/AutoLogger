@@ -19,7 +19,7 @@ module.exports = (context, app, mids) => {
             if (t_module) {
                 const module = t_module(context, config);
                 api[config.method](`${config.name}`, module);
-                console.log(`- ${config.method.toUpperCase()}`,`/${routesRoot}${config.name}` , `${config.desc}`)
+                console.log(`- ${config.method.toUpperCase()}`,`${config.name}` , `${config.desc}`)
             }
         });
     app.use(`/${routesRoot}`, mids, api);

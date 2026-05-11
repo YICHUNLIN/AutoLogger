@@ -25,7 +25,7 @@ Method.prototype.exec = async function({content, title, message, level, footer})
             }]
         };
         await axios.post(this.webhookurl, payload);
-        console.log(`✅ 已成功發送 去 Discord (目標 IP: ${ip})`);
+        console.log(`✅ 已成功發送 去 Discord`);
     } catch (err) {
         console.error('❌ Discord 通知發送失敗:', err.response ? JSON.stringify(err.response.data) : err.message);
     }

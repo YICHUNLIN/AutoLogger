@@ -116,10 +116,10 @@ module.exports = function(context){
             // ------------------------------------------
             // 只要陣列中有任何警報訊息，就呼叫 Slack 發送
             const level = isCritical ? 'critical' : 'warning';
-            LogCollector.exec(ip, alerts, level);
+            LogCollector.exec({ip, alerts, level});
 
             // 預留寫入資料庫的區塊供 Dashboard 使用
-            AddAgentLog(ip, timestamp, {...req.body, level})
+            AddAgentLog.exec(ip, timestamp, {...req.body, level})
             res.status(200).json({ message: 'Report processed successfully' });
 
         }

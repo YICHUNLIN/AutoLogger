@@ -9,10 +9,8 @@ module.exports = function(context){
     return [
         ipFilter,
         (req, res) => {
-            const { title, message,footer } = req.body;
-            const ip = req.clientIp;
-
-            EmpNotify(ip, title, message, footer);
+            const { title, message, footer } = req.body;
+            EmpNotify.exec({title, message, footer});
 
             // 預留寫入資料庫的區塊供 Dashboard 使用
             

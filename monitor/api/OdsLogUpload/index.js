@@ -10,9 +10,8 @@ module.exports = function(context){
         ipFilter,
         (req, res, next) => {
             const { title, message,footer } = req.body;
-            const ip = req.clientIp;
 
-            OdskeyNofify(ip, title, message, footer, 'warning');
+            OdskeyNofify.exec({title, message, footer, level:'warning'});
 
             // 預留寫入資料庫的區塊供 Dashboard 使用
             

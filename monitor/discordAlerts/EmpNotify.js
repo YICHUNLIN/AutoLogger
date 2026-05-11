@@ -10,21 +10,23 @@ function Method(context){
 }
 
 Method.prototype.exec = async function({content, title, message, footer}){
-    const payload = {
-        content, // 顯示在訊息最上方的純文字
-        embeds: [{
-            title: title,
-            description: message.join('\n\n'),
-            color: colors.info,
-            footer: {
-                text: footer
-            },
-            timestamp: new Date().toISOString() // 自動加上右下角的精準時間
-        }]
-    };
+    
     try {
+        if (!Array.isArray(message)) throw new Error('[USE_ERORR][PARAMETER] message must be an array')
+        const payload = {
+            content, // 顯示在訊息最上方的純文字
+            embeds: [{
+                title: title,
+                description: message.join('\n\n'),
+                color: colors.info,
+                footer: {
+                    text: footer
+                },
+                timestamp: new Date().toISOString() // 自動加上右下角的精準時間
+            }]
+        };
         await axios.post(this.webhookurl, payload);
-        console.log(`✅ 已成功發送 去 Discord (目標 IP: ${ip})`);
+        console.log(`✅ 已成功發送 去 Discord`);
     } catch (err) {
         console.error('❌ Discord 通知發送失敗:', err.response ? JSON.stringify(err.response.data) : err.message);
     }
