@@ -5,13 +5,13 @@
 
 module.exports = function(context){
     const {ipFilter} = context.mids;
-    const {OdskeyNofify} = context.discord
+    const {OdskeyNotify} = context.discord
     return [
         ipFilter,
         (req, res, next) => {
             const { title, message,footer } = req.body;
 
-            OdskeyNofify.exec({title, message, footer, level:'warning'});
+            OdskeyNotify.exec({title, message, footer, level:'warning'});
 
             // 預留寫入資料庫的區塊供 Dashboard 使用
             
