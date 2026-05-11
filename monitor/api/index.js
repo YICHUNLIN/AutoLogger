@@ -18,7 +18,7 @@ module.exports = (context, app, mids) => {
             const t_module = require(`./${dir}/${config.index}`);
             if (t_module) {
                 const module = t_module(context, config);
-                api[config.method](`/${routesRoot}${config.name}`, module);
+                api[config.method](`${config.name}`, module);
                 console.log(`- ${config.method.toUpperCase()}`,`/${routesRoot}${config.name}` , `${config.desc}`)
             }
         });
