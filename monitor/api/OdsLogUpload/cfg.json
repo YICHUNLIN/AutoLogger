@@ -1,0 +1,6 @@
+{
+    "name":"/upload-ods-logs",
+    "method": "post",
+    "desc": "新增帳號系統log",
+    "index": "index.js"
+}

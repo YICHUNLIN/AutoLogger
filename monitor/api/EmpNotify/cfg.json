@@ -1,0 +1,6 @@
+{
+    "name":"/upload-emp-logs",
+    "method": "post",
+    "desc": "新增員工系統的log",
+    "index": "index.js"
+}
