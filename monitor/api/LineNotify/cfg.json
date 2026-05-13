@@ -1,0 +1,6 @@
+{
+    "name":"/upload-line-logs",
+    "method": "post",
+    "desc": "新增Line推播轉接到discord",
+    "index": "index.js"
+}
